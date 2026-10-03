@@ -1,0 +1,15 @@
+{
+  "name": "timeline-guardian-app",
+  "version": "1.0.0",
+  "description": "نگهبان خط زمان - بازی آموزش Git و GitHub",
+  "scripts": {
+    "build-android": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
