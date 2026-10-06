@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نگهبان خط زمان</title>
+<meta name="description" content="بازی آموزشی برای یادگیری Git و GitHub از طریق یک داستان ماجراجویانه">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12181F">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  @font-face{
+    font-family:'Vazirmatn';
+    src: url('fonts/Vazirmatn-Variable.woff2') format('woff2 supports variations'),
+         url('fonts/Vazirmatn-Variable.woff2') format('woff2-variations'),
+         url('fonts/Vazirmatn-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+<style>
+  :root{
+    --bg:#12181F; --card:#1B232D; --ink:#EDEFF3; --ink-soft:#8C97A8;
+    --primary:#3E7FC1; --primary-ink:#F5FAFF;
+    --accent:#4FA98D; --accent-soft:#173029;
+    --warn:#D97985; --warn-soft:#2E1A1D;
+    --gold:#E0B65C; --line:#2B3542;
+    --term-bg:#0C1116; --term-ink:#D8E0EA; --term-prompt:#6FBFA0; --term-cmd:#E0B65C;
+    --radius:20px; --radius-sm:12px;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Vazirmatn',Tahoma,sans-serif; min-height:100vh; display:flex; justify-content:center; padding:28px 14px; }
+  .app{ width:100%; max-width:480px; }
+  header{ text-align:center; margin-bottom:16px; }
+  .logo{ display:inline-flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .logo-mark{ width:26px;height:26px; border-radius:7px; background:linear-gradient(135deg,var(--primary),var(--accent)); color:var(--primary-ink); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  h1{ font-size:23px; font-weight:800; margin:0; letter-spacing:.2px; }
+  .subtitle{ color:var(--ink-soft); font-size:13px; margin-top:4px; line-height:1.7; }
+  .statusbar{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; }
+  .stars{ font-size:13px; font-weight:600; color:var(--gold); background:#2A2210; border:1px solid #4A3B18; padding:5px 11px; border-radius:20px; }
+  .dots{ display:flex; gap:5px; flex-wrap:wrap; max-width:260px; justify-content:center; }
+  .dot{ width:7px;height:7px; border-radius:50%; background:transparent; border:2px solid var(--line); transition:.2s; }
+  .dot.done{ background:var(--accent); border-color:var(--accent); }
+  .dot.current{ border-color:var(--primary); transform:scale(1.3); }
+  .dot.quiz{ border-radius:2px; }
+
+  .card{ background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:0 10px 28px rgba(0,0,0,.35); border:1px solid var(--line); }
+
+  .mentor-row{ display:flex; gap:10px; align-items:flex-start; margin-bottom:16px; }
+  .avatar{ width:38px;height:38px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--accent)); color:var(--primary-ink); flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .mentor-bubble{ background:#232E3A; border:1px solid var(--line); border-radius:14px; border-top-right-radius:4px; padding:12px 14px; font-size:14px; line-height:1.95; color:#DCE3EC; }
+  .chapter-title{ font-size:19px; font-weight:800; margin-bottom:10px; color:#fff; }
+  .codes-preview{ margin-bottom:16px; }
+  .codes-preview-label{ font-size:12px; color:var(--ink-soft); display:block; margin-bottom:6px; }
+  .code-pills{ display:flex; flex-wrap:wrap; gap:6px; }
+  .code-pill{ direction:ltr; font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:11px; background:var(--term-bg); color:var(--term-prompt); border:1px solid var(--line); border-radius:8px; padding:5px 9px; }
+
+  .task-bubble{ background:linear-gradient(135deg,#1F3A55,#1B4A42); color:#EAF4EF; padding:13px 15px; border-radius:16px; border-bottom-right-radius:4px; font-size:14px; line-height:1.9; margin-bottom:14px; border:1px solid #2C4C56; }
+  .task-label{ font-size:11px; color:#9FD4C4; margin-bottom:3px; letter-spacing:.2px; }
+
+  .visual-panel{ background:#182029; border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:14px; }
+  .visual-label{ font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
+  .pipeline{ display:flex; align-items:center; gap:6px; }
+  .pipe-box{ flex:1; background:#101720; border:1.5px solid var(--line); border-radius:10px; padding:10px 6px; text-align:center; font-size:11px; color:var(--ink-soft); min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:.25s; }
+  .pipe-box.active{ border-color:var(--accent); background:var(--accent-soft); color:#8FE3C8; font-weight:600; }
+  .pipe-arrow{ color:var(--ink-soft); font-size:14px; }
+  .pipe-file{ font-size:16px; }
+
+  .branch-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .branch-name{ font-size:11px; font-family:'SFMono-Regular',Menlo,Consolas,monospace; color:var(--ink-soft); width:88px; flex:0 0 auto; }
+  .branch-name.current{ color:var(--gold); font-weight:700; }
+  .commit-dots{ display:flex; gap:5px; flex-wrap:wrap; }
+  .commit-dot{ width:14px;height:14px; border-radius:50%; background:var(--primary); border:2px solid var(--primary); }
+  .commit-dot.vegan{ background:var(--accent); border-color:var(--accent); }
+  .commit-dot.merge{ background:var(--gold); border-color:var(--gold); }
+  .commit-dot.revert{ background:var(--warn); border-color:var(--warn); }
+  .commit-dot.ghost{ background:transparent; border:2px dashed var(--ink-soft); opacity:.5; }
+  .here-badge{ font-size:10.5px; color:var(--gold); background:#2A2210; border:1px solid #4A3B18; border-radius:20px; padding:2px 8px; margin-inline-start:4px; }
+  .detached-note{ font-size:11px; color:var(--gold); margin-bottom:8px; background:#2A2210; border:1px solid #4A3B18; border-radius:8px; padding:6px 9px; }
+
+  .stash-box{ display:flex; align-items:center; gap:10px; }
+  .stash-icon{ width:52px;height:52px; border-radius:12px; background:#101720; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:24px; transition:.25s; }
+  .stash-icon.full{ border-color:var(--gold); background:#2A2210; }
+  .stash-text{ font-size:12.5px; color:var(--ink-soft); }
+
+  .remote-row{ display:flex; align-items:center; gap:10px; }
+  .remote-box{ flex:1; background:#101720; border:1.5px solid var(--line); border-radius:10px; padding:10px; text-align:center; }
+  .remote-box .rb-title{ font-size:11px; color:var(--ink-soft); margin-bottom:6px; }
+  .remote-box .rb-dots{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; }
+  .remote-arrow{ font-size:18px; color:var(--ink-soft); }
+  .remote-box.connected{ border-color:var(--accent); }
+
+  .terminal{ background:var(--term-bg); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:10px; direction:ltr; text-align:left; font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:12.5px; max-height:190px; overflow-y:auto; border:1px solid #000; }
+  .term-line{ line-height:1.75; white-space:pre-wrap; word-break:break-word; }
+  .term-line.cmd{ color:var(--term-prompt); }
+  .term-line.cmd .prompt{ color:#5B6B7A; }
+  .term-line.cmd .cmdtext{ color:var(--term-cmd); }
+  .term-line.out{ color:var(--term-ink); }
+  .term-line.err{ color:#E39AA1; }
+  .term-line.diffadd{ color:#8FE3C8; }
+  .term-line.diffrem{ color:#F0B3BB; }
+  .term-input-row{ display:flex; align-items:center; background:var(--term-bg); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:14px; direction:ltr; gap:6px; border:1px solid #000; }
+  .term-input-row .prompt{ color:#5B6B7A; font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:12.5px; white-space:nowrap; }
+  .term-input{ flex:1; background:transparent; border:none; outline:none; color:var(--term-cmd); font-family:'SFMono-Regular',Menlo,Consolas,monospace; font-size:12.5px; }
+  .term-run{ background:var(--accent); color:#08201A; border:none; border-radius:8px; padding:6px 12px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+
+  .actions{ display:flex; gap:10px; align-items:center; }
+  .btn{ border:none; border-radius:12px; padding:12px 18px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.1s; }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{ background:var(--primary); color:var(--primary-ink); flex:1; }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1.5px solid var(--line); }
+  .btn-success{ background:var(--accent); color:#08201A; flex:1; }
+
+  .feedback{ margin-top:12px; padding:12px 14px; border-radius:12px; font-size:13.5px; line-height:1.85; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background:var(--accent-soft); color:#A9E8D3; border:1px solid #2B5B4C; }
+  .feedback.no{ background:var(--warn-soft); color:#F0B3BB; border:1px solid #5B2C33; }
+  .feedback .star-line{ margin-top:6px; font-weight:700; color:var(--gold); }
+
+  .hint-text{ font-size:12.5px; color:var(--ink-soft); margin-top:10px; display:none; line-height:1.8; }
+  .hint-text.show{ display:block; }
+
+  .quiz-q{ font-size:15px; font-weight:600; margin-bottom:14px; line-height:1.9; color:#fff; }
+  .quiz-opt{ display:block; width:100%; text-align:right; background:#202A35; border:1.5px solid var(--line); color:var(--ink); border-radius:12px; padding:11px 14px; margin-bottom:8px; font-family:inherit; font-size:13.5px; cursor:pointer; }
+  .quiz-opt.correct{ background:var(--accent-soft); border-color:var(--accent); color:#A9E8D3; }
+  .quiz-opt.wrong{ background:var(--warn-soft); border-color:var(--warn); color:#F0B3BB; }
+  .quiz-explain{ margin-top:10px; font-size:13px; color:#C6CEDA; line-height:1.8; background:#202A35; border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:none; }
+  .quiz-explain.show{ display:block; }
+
+  .choice-opt{ display:block; width:100%; text-align:right; background:#202A35; border:1.5px solid var(--line); color:var(--ink); border-radius:12px; padding:12px 14px; margin-bottom:8px; font-family:inherit; font-size:13.5px; cursor:pointer; }
+  .choice-opt.picked{ background:var(--accent-soft); border-color:var(--accent); color:#A9E8D3; }
+
+  .final{ text-align:center; padding:20px 6px; }
+  .final h2{ margin:6px 0 6px; font-size:20px; color:#fff; }
+  .final p{ color:var(--ink-soft); font-size:14px; line-height:1.9; margin-bottom:8px; }
+  .final .stars-final{ font-size:22px; margin:14px 0; color:var(--gold); font-weight:800; }
+  .credit{ text-align:center; margin-top:18px; font-size:10.5px; color:var(--line); }
+  .credit a{ color:var(--ink-soft); text-decoration:none; }
+  .credit a:hover{ color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><div class="logo-mark">⏳</div><h1>نگهبان خط زمان</h1></div>
+    <div class="subtitle">یاد گرفتن Git و GitHub در نقش متین، مأمور سازمان نگهبانان خط زمان</div>
+    <div class="statusbar">
+      <div class="dots" id="dots"></div>
+      <div class="stars" id="starBadge">⭐ ۰</div>
+    </div>
+  </header>
+  <div class="card" id="gameCard"></div>
+  <div class="credit">ساخته‌ی <a href="https://matinmovafagh.ir/" target="_blank" rel="noopener">متین موفق</a></div>
+</div>
+
+<script>
+/* ================= content ================= */
+const SUCCESS_LINES = [
+  "متین رضایت‌مندانه سر تکون می‌ده: «آفرین، دقیقاً همین بود.»",
+  "دستور درست اجرا شد. حتی سیستمِ سازمان یه بوق کوتاهِ تاییدیه می‌زنه.",
+  "متین: «حالا داری مثل یه نگهبان خط زمان واقعی عمل می‌کنی، نه مثل روز اولم که فکر می‌کردم git یعنی یه فحش انگلیسیه.»",
+  "کار کرد! خط زمان الان دقیقاً می‌دونه چه اتفاقی افتاده.",
+  "متین یه نگاه به صفحه می‌ندازه: «همینه. خط زمان امن‌تر شد.»",
+];
+const FAIL_LINES = [
+  "چیزی که تایپ کردی رو سیستم نمی‌شناسه یا برای این مرحله نیست. یه بار دیگه با دقت نگاه کن.",
+  "متین سرشو کج می‌کنه: «نزدیک بود، ولی نه دقیقاً. تایپو نداره؟»",
+  "دستور اجرا نشد. اگه گیر کردی، دکمه‌ی «راهنما» رو بزن.",
+  "متین: «سیستم به فاصله‌ها و املا حساسه، ولی به بزرگ/کوچیک بودن حروف انگلیسی نه. یه‌بار دیگه.»",
+];
+
+function normalize(s){ return s.trim().replace(/\s+/g,' '); }
+
+const STEPS = [
+  { type:"chapter", title:"استخدامی عجیب", avatar:"م", codes:["git init","git status","git add","git commit","git log"],
+    text:"متین یه مدتی باریستای «کافه فلکس» بود (همون بازی‌ای که Flexbox رو با چیدن فنجون قهوه یاد می‌ده). یه شب تصمیم گرفت دستور پخت کیک شکلاتیِ محبوبش رو بهتر کنه؛ همون فایلی که سال‌ها روش کار کرده بود رو باز کرد و مستقیم توش تغییر داد. نتیجه افتضاح از آب دراومد. خواست برگرده به نسخه‌ی قبلی... و همون‌جا فهمید نسخه‌ی قبلی اصلاً جایی ذخیره نشده بود — چون مستقیم روی همون فایل نوشته بود، نسخه‌ی خوب برای همیشه از بین رفته بود. دقیقاً همون شب بود که یاد گرفت باید هر نسخه رو، قبل از تغییر دادنش، یه‌جا ذخیره کنه تا بشه هر وقت خواست برگرده عقب — و اسم اون ابزار Git بود. چند هفته بعد، یه ایمیل عجیب دریافت کرد: «به سازمان نگهبانان خط زمان خوش اومدی. ما دنبال کسی می‌گشتیم که بلد باشه از گذشته محافظت کنه. تو بلدی.» حالا متین مأمور تازه‌کاره، و اولین ماموریتش شروع شده." },
+
+  { type:"level", task:"ماموریت ۱: شروع ردیابی خط زمان",
+    customerLine:"سرپرست سازمان روی مانیتور ظاهر می‌شه: «متین، یه پرونده به اسم timeline-log.md داریم که وقایع مهم رو ثبت می‌کنه. اول باید بگیم سیستم این پوشه رو زیر نظر بگیره.»",
+    accept:/^git\s+init$/i,
+    success:["Initialized empty Git repository in ./timeline/.git/"],
+    hint:"دستور شروع ردیابی یه پوشه: git init",
+    effect:"init" },
+
+  { type:"level", task:"ماموریت ۲: بررسی وضعیت",
+    customerLine:"«فایل timeline-log.md همین الان توی پوشه ساخته شده. قبل از هر کاری، ببین سیستم چی می‌بینه.»",
+    accept:/^git\s+status$/i,
+    success:["On branch main","","No commits yet","","Untracked files:","  (use \"git add <file>...\" to include in what will be committed)","        timeline-log.md"],
+    hint:"دستور وضعیت فعلی: git status",
+    effect:"status", visualMode:"pipeline", pipelineStage:0 },
+
+  { type:"level", task:"ماموریت ۳: آماده‌سازی سند",
+    customerLine:"«سیستم می‌گه این فایل رو نمی‌شناسه. باید اول بذاریمش توی صف بررسی، قبل از این‌که رسمی ثبت بشه.»",
+    accept:/^git\s+add\s+(timeline-log\.md|\.)$/i,
+    success:["(سند به صف بررسی اضافه شد)"],
+    hint:"دستور: git add timeline-log.md — یا برای همه‌ی فایل‌ها با هم: git add .",
+    effect:"stage", visualMode:"pipeline", pipelineStage:1 },
+
+  { type:"level", task:"ماموریت ۴: ثبت رسمی در بایگانی",
+    customerLine:"«سند آماده‌ست. الان باید یه عکس‌فوری دائمی ازش بگیریم، با یه توضیح کوتاه که بعداً بفهمیم این چک‌پوینت چی بوده.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main (root-commit) a1c3f9e] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " 1 file changed, 1 insertion(+)"],
+    hint:"دستور: git commit -m \"توضیح کوتاه درباره‌ی این چک‌پوینت\" — مثلاً git commit -m \"شروع رسمی ردیابی خط زمان\"",
+    effect:"commit", visualMode:"pipeline", pipelineStage:2 },
+
+  { type:"level", task:"ماموریت ۵: مرور بایگانی",
+    customerLine:"«حالا بیا ببینیم توی بایگانی چی ثبت شده. یه لیست کوتاه از چک‌پوینت‌ها می‌خوایم. کد این چک‌پوینت (a1c3f9e) رو یادت بمونه، بعداً بهش نیاز داریم.»",
+    accept:/^git\s+log(\s+--oneline)?$/i,
+    success:(cmd)=> /--oneline/i.test(cmd) ? ["a1c3f9e (HEAD -> main) شروع رسمی ردیابی خط زمان"] :
+      ["commit a1c3f9e...","Author: متین <matin@timeline-agency.org>","Date:   امروز","","    شروع رسمی ردیابی خط زمان"],
+    hint:"دستور کوتاه: git log --oneline — یا بدون فلگ هم کار می‌کنه ولی طولانی‌تره: git log",
+    effect:"log", visualMode:"branch" },
+
+  { type:"quiz", title:"استراحت کوتاه در اتاق کنترل",
+    question:"فرقِ «صف بررسی» (staging) با «ثبت رسمی» (commit) چیه؟",
+    options:[
+      {t:"هیچ فرقی ندارن، اسمشون فرق داره فقط", correct:false},
+      {t:"staging یعنی «آماده برای ثبت»، commit یعنی «واقعاً و برای همیشه ثبت شد»", correct:true},
+      {t:"staging برای سرپرسته، commit برای متینه", correct:false},
+    ],
+    explain:"با git add سند می‌ره توی صف بررسی، ولی هنوز توی بایگانی ثبت نشده. با git commit همون چیزی که توی صفه، دائمی می‌شه و یه چک‌پوینت توی خط زمان می‌گیره." },
+
+  { type:"chapter", title:"یه اشتباه تایپیِ کوچیک", avatar:"م", codes:["git commit --amend"],
+    text:"متین داره از سر میزش بلند می‌شه که یه چیزی توجهش رو جلب می‌کنه: توی پیام آخرین چک‌پوینتی که ثبت کرده بود، یه غلط املایی هست. «الان که هنوز به کسی نفرستادمش، لازم نیست یه چک‌پوینت کاملاً جدید بسازم فقط برای یه غلط تایپی. باید یه راهی باشه که همین آخری رو اصلاح کنم.»" },
+
+  { type:"level", task:"ماموریت ۵.۵: اصلاح آخرین چک‌پوینت",
+    customerLine:"«با commit --amend می‌تونی آخرین چک‌پوینت رو دوباره بنویسی، انگار از اول درست ثبتش کرده بودی.»",
+    accept:/^git\s+commit\s+--amend\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main a1c3f9e] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " (پیام چک‌پوینت قبلی جایگزین شد، چک‌پوینت جدیدی ساخته نشد)"],
+    hint:"دستور: git commit --amend -m \"شروع رسمی ردیابی خط زمان (بدون غلط املایی)\"",
+    effect:"amend", visualMode:"branch" },
+
+  { type:"chapter", title:"ماموریت بزرگ: پرونده‌ی دایناسورها", avatar:"م", codes:["git branch","git checkout","git merge"],
+    text:"سرپرست با لحن جدی‌تری می‌گه: «یه تیم تحقیقاتی می‌خواد یه فرضیه‌ی خطرناک رو تست کنه: اگه شهاب‌سنگ ۶۶ میلیون سال پیش به زمین نمی‌خورد چی؟ نمی‌تونیم مستقیم خط زمان اصلی رو دستکاری کنیم — اگه اشتباه کنیم، کل تاریخ به‌هم می‌ریزه. باید یه branch بسازیم: یه خط زمان موازی که توش آزمایش کنیم، بدون این‌که به نسخه‌ی اصلی صدمه بزنه.» متین زیر لب می‌گه: «پس branch دقیقاً یعنی یه شاخه‌ی جدا... باحاله.»" },
+
+  { type:"level", task:"ماموریت ۶: باز کردن یه خط زمان موازی",
+    customerLine:"«یه branch جدید بساز به اسم dino-survive. این خط زمانیه که توش دایناسورها زنده می‌مونن.»",
+    accept:/^git\s+branch\s+dino-survive$/i,
+    success:["(خط زمان dino-survive از روی main باز شد)"],
+    hint:"دستور: git branch dino-survive",
+    effect:"createBranch", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۷: سفر به خط زمان جدید",
+    customerLine:"«فقط باز کردنِ branch کافی نیست، هنوز توی main هستی. باید واقعاً بری داخل dino-survive.»",
+    accept:/^git\s+(checkout|switch)\s+dino-survive$/i,
+    success:["Switched to branch 'dino-survive'"],
+    hint:"دستور: git checkout dino-survive — یا نسخه‌ی جدیدترش: git switch dino-survive",
+    effect:"switchBranch", branchTarget:"dino-survive", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۸: ثبت تغییرات فرضیه",
+    customerLine:"«توی این خط زمان، سند رو ویرایش کردیم: نوشتیم دایناسورها زنده موندن. حالا دوباره همون مسیر همیشگی: add.»",
+    accept:/^git\s+add\s+(timeline-log\.md|\.)$/i,
+    success:["(تغییرات خط زمان dino-survive به صف بررسی اضافه شد)"],
+    hint:"دستور: git add timeline-log.md",
+    effect:"stage", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۹: قطعی‌کردن فرضیه",
+    customerLine:"«حالا کامیتش کن، با یه پیام که بگه این فرضیه‌ی بقای دایناسورهاست.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[dino-survive b7e2a41] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " 1 file changed, 1 insertion(+), 1 deletion(-)"],
+    hint:"دستور: git commit -m \"فرضیه: دایناسورها منقرض نشدن\"",
+    effect:"commitOnBranch", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۰: بازگشت به خط زمان اصلی",
+    customerLine:"«فرضیه ثبت شد. حالا بیا برگردیم به main تا ببینیم چطور می‌تونیم این دو خط زمان رو با هم قاطی کنیم — یا نه.»",
+    accept:/^git\s+(checkout|switch)\s+main$/i,
+    success:["Switched to branch 'main'"],
+    hint:"دستور: git checkout main",
+    effect:"switchBranch", branchTarget:"main", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۱: تلاش برای ادغام دو خط زمان",
+    customerLine:"«با merge، خط زمان dino-survive رو بیار توی main. آماده باش، این یکی ممکنه سخت باشه.»",
+    accept:/^git\s+merge\s+dino-survive$/i,
+    success:["Auto-merging timeline-log.md","CONFLICT (content): Merge conflict in timeline-log.md","Automatic merge failed; fix conflicts and then commit the result."],
+    outputType:"err",
+    hint:"دستور: git merge dino-survive",
+    effect:"mergeConflict", visualMode:"branch" },
+
+  { type:"choice", title:"⚠️ پارادوکس زمانی شناسایی شد", avatar:"م",
+    customerLine:"«این یعنی conflict — یا همون‌طور که اینجا صداش می‌کنیم، یه پارادوکس زمانی. توی main نوشته «شهاب‌سنگ برخورد کرد، دایناسورها منقرض شدن»، توی dino-survive نوشته «شهاب‌سنگ برخورد نکرد، دایناسورها زنده‌ان». سیستم نمی‌دونه کدومو واقعیت رسمی اعلام کنه، پس از تو می‌پرسه.»",
+    options:[
+      {label:"واقعیت اصلی رو نگه دار (شهاب‌سنگ برخورد کرد)", reaction:"متین: «باشه، فعلاً محافظه‌کار می‌مونیم. فرضیه‌ی دایناسورها می‌مونه برای یه بررسی دیگه.»"},
+      {label:"فرضیه‌ی جدید رو رسمی اعلام کن (دایناسورها زنده‌ان)", reaction:"متین با تعجب: «یعنی الان یه‌جایی توی سیستم، یه دایناسور داره قهوه سفارش می‌ده؟ باشه، ریسک می‌کنیم.»"},
+      {label:"هر دو رو به‌عنوان دو خط زمانی موازی مستند کن", reaction:"متین لبخند می‌زنه: «این دقیقاً کاریه که مأمورهای حرفه‌ای موقع پارادوکس می‌کنن — هر دو نسخه رو نگه می‌دارن و مشخص می‌کنن کدوم کِی معتبره. نه شهاب‌سنگ حذف می‌شه، نه دایناسور.»"},
+    ],
+    afterText:"در واقعیت، اینجا باید سند رو دستی باز کنی، خط‌های &lt;&lt;&lt;&lt;&lt;&lt;&lt; و ======= و &gt;&gt;&gt;&gt;&gt;&gt;&gt; که سیستم اضافه کرده رو پاک کنی، و بنویسی چی می‌خوای نگه داری. بعدش دوباره همون مسیر همیشگی: add و commit." },
+
+  { type:"level", task:"ماموریت ۱۲: تایید نسخه‌ی نهایی",
+    customerLine:"«خب، سند رو دستی درست کردیم. حالا باید بگیم به سیستم که پارادوکس حل شده — دوباره add.»",
+    accept:/^git\s+add\s+(timeline-log\.md|\.)$/i,
+    success:["(سندِ حل‌شده به صف بررسی اضافه شد)"],
+    hint:"دستور: git add timeline-log.md",
+    effect:"stage", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۳: بستن پرونده‌ی ادغام",
+    customerLine:"«یه کامیت دیگه بزن تا merge رسماً تموم بشه و پارادوکس بسته بشه.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main d4f8c02] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      "Merge branch 'dino-survive'"],
+    hint:"دستور: git commit -m \"حل پارادوکس دایناسورها\"",
+    effect:"commitMerge", visualMode:"branch" },
+
+  { type:"quiz", title:"استراحت کوتاه در اتاق کنترل",
+    question:"اگه بدون ساختن branch جدید، مستقیم روی main فرضیه‌ی دایناسورها رو تست می‌کردیم و اشتباه از آب درمی‌اومد، چی می‌شد؟",
+    options:[
+      {t:"هیچی، سیستم خودش واقعیت اصلی رو یادش می‌مونه", correct:false},
+      {t:"خط زمان اصلی همون‌جا خراب می‌شد تا یه چک‌پوینت دیگه درستش کنه", correct:true},
+      {t:"سیستم خودکار جلوی ثبت تغییرات خطرناک رو می‌گیره", correct:false},
+    ],
+    explain:"main همیشه همون چیزیه که آخرین بار commit کردی روش. branch جداگانه دقیقاً برای همینه: آزمایش کنی بدون این‌که واقعیت اصلی رو به خطر بندازی." },
+
+  { type:"level", task:"ماموریت ۱۴: جمع‌کردن خط زمان آزمایشی",
+    customerLine:"«پرونده‌ی دایناسورها بسته شد و dino-survive دیگه لازم نیست — همه‌چیزش قبلاً وارد main شده. توی سازمان‌های حرفه‌ای، شعبه‌های تمام‌شده رو پاک می‌کنن که نقشه‌ی خط‌های زمانی شلوغ نشه.»",
+    accept:/^git\s+branch\s+-d\s+dino-survive$/i,
+    success:["Deleted branch dino-survive (was b7e2a41)."],
+    hint:"دستور حذف یه branch که کارش تموم شده: git branch -d dino-survive",
+    effect:"deleteBranch", visualMode:"branch" },
+
+  { type:"chapter", title:"سفر واقعی به گذشته", avatar:"م", codes:["git checkout <کد چک‌پوینت>"],
+    text:"سرپرست یه پرونده‌ی جدید باز می‌کنه: «متین، یه گزارش داریم که می‌گه شاید همون اولین چک‌پوینتی که ثبت کردیم، قبل از هر تغییری، یه سرنخ مهم داشته. تنها راه فهمیدنش اینه که واقعاً بریم اونجا رو ببینیم — نه یه گزارش، بلکه دقیقاً همون لحظه.» متین لبخند می‌زنه: «بالاخره یه ماموریت که اسمش با شغلم می‌خونه.»" },
+
+  { type:"level", task:"ماموریت ۱۵: سفر به اولین چک‌پوینت",
+    customerLine:"«یادته کد اولین چک‌پوینت رو؟ همون که توی log دیدیم: a1c3f9e. با checkout می‌تونی دقیقاً بری همون لحظه.»",
+    accept:/^git\s+checkout\s+a1c3f9e$/i,
+    success:["Note: switching to 'a1c3f9e'.","You are in 'detached HEAD' state. You can look around, make changes, but going back requires switching to a branch.","HEAD is now at a1c3f9e شروع رسمی ردیابی خط زمان"],
+    hint:"دستور: git checkout a1c3f9e — دقیقاً همون کدی که توی ماموریت ۵ توی log دیدیم",
+    effect:"travelBack", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۶: بازگشت به زمان حال",
+    customerLine:"«سرنخ رو دیدیم و ثبت کردیم. حالا قبل از این‌که اتفاق بدی بیفته، برگرد به زمان حال — یعنی برگرد به main.»",
+    accept:/^git\s+checkout\s+main$/i,
+    success:["Switched to branch 'main'"],
+    hint:"دستور: git checkout main",
+    effect:"returnFromTravel", visualMode:"branch" },
+
+  { type:"chapter", title:"بحران: یه تغییر اشتباه", avatar:"م", codes:["git diff","git revert"],
+    text:"یه هشدار قرمز روی مانیتور متین چشمک می‌زنه. یکی از مأمورهای تازه‌کار، بدون بررسی درست، تاریخ یه رویداد مهم رو اشتباه توی timeline-log.md ثبت کرده و commit هم کرده. سرپرست عصبی می‌گه: «نمی‌تونیم فقط پاکش کنیم — باید بفهمیم دقیقاً چی عوض شده، و بعد یه راه امن برای لغوش پیدا کنیم، بدون این‌که مدرک این اشتباه از تاریخ محو بشه. باید بدونیم چی شد، نه اینکه وانمود کنیم هیچی نشده.»" },
+
+  { type:"level", task:"ماموریت ۱۷: بررسی چی تغییر کرده",
+    customerLine:"«قبل از این‌که چیزی رو commit کنیم، بیا ببینیم دقیقاً چه خطی عوض شده توی فایل.»",
+    accept:/^git\s+diff$/i,
+    success:["diff --git a/timeline-log.md b/timeline-log.md","--- a/timeline-log.md","+++ b/timeline-log.md","@@ تاریخ رویداد @@","-تاریخ ثبت‌شده: ۱۴۰۲/۰۵/۱۲","+تاریخ ثبت‌شده: ۱۴۰۲/۰۹/۰۳"],
+    hint:"دستور: git diff — خط‌های قرمز یعنی حذف‌شده، خط‌های سبز یعنی اضافه‌شده",
+    effect:"diffCheck", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۸: ثبت (اشتباهی) این تغییر",
+    customerLine:"«متأسفانه مأمور تازه‌کار همینو commit کرده بود، قبل از این‌که بفهمه اشتباهه. بیا شبیه‌سازی کنیم چی ثبت شده — اول add.»",
+    accept:/^git\s+add\s+(timeline-log\.md|\.)$/i,
+    success:["(تغییر اشتباه به صف بررسی اضافه شد)"],
+    hint:"دستور: git add timeline-log.md",
+    effect:"stage", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۹: قطعی‌شدن اشتباه",
+    customerLine:"«حالا کامیتش کن، دقیقاً همون‌طور که مأمور تازه‌کار زده بود.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main e5a71c9] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " 1 file changed, 1 insertion(+), 1 deletion(-)"],
+    hint:"دستور: git commit -m \"به‌روزرسانی تاریخ رویداد\"",
+    effect:"commit", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۱۹.۵: پیدا کردن مسئول تغییر",
+    customerLine:"«خب، حالا که اشتباه توی بایگانی ثبت شده، بیا دقیق ردش رو بزنیم: کی و توی کدوم چک‌پوینت این خط رو نوشته؟»",
+    accept:/^git\s+blame\s+timeline-log\.md$/i,
+    success:["a1c3f9e (متین           امروز  1) # تاریخچه‌ی رسمی خط زمان","e5a71c9 (مأمور-تازه‌کار  امروز  2) تاریخ ثبت‌شده: ۱۴۰۲/۰۹/۰۳"],
+    hint:"دستور: git blame timeline-log.md — جلوی هر خط می‌نویسه کدوم چک‌پوینت و کی اون خط رو نوشته",
+    effect:"blame", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۲۰: لغو امن این چک‌پوینت",
+    customerLine:"«کد این چک‌پوینت اشتباه e5a71c9 شد. الان با revert یه چک‌پوینت جدید می‌سازیم که دقیقاً برعکس این تغییر رو انجام می‌ده — طوری که هم اشتباه اصلاح بشه، هم مدرک این‌که اشتباهی رخ داده، توی تاریخچه بمونه.»",
+    accept:/^git\s+revert\s+\S+$/i,
+    success:["[main f2c918d] Revert \"به‌روزرسانی تاریخ رویداد\""," 1 file changed, 1 insertion(+), 1 deletion(-)"],
+    hint:"دستور: git revert e5a71c9",
+    effect:"revert", visualMode:"branch" },
+
+  { type:"quiz", title:"استراحت کوتاه در اتاق کنترل",
+    question:"چرا از git revert استفاده کردیم به‌جای این‌که با یه دستور دیگه (git reset) چک‌پوینت اشتباه رو کاملاً از تاریخچه پاک کنیم؟",
+    options:[
+      {t:"چون revert سریع‌تر تایپ می‌شه", correct:false},
+      {t:"چون revert یه چک‌پوینت جدید می‌سازه و مدرک اشتباه رو نگه می‌داره؛ reset تاریخچه رو پاک می‌کنه و خطرناکه، خصوصاً وقتی دیگران هم به همون تاریخچه دسترسی دارن", correct:true},
+      {t:"چون reset اصلاً توی گیت وجود نداره", correct:false},
+    ],
+    explain:"git reset --hard می‌تونه چک‌پوینت‌ها رو کاملاً حذف کنه — قدرتمند ولی خطرناک، مخصوصاً بعد از push کردن. git revert همیشه امن‌تره چون به‌جای پاک کردن تاریخچه، یه چک‌پوینت جدید اضافه می‌کنه که می‌گه «این تغییر رو لغو کن»." },
+
+  { type:"chapter", title:"وقفه‌ی اضطراری", avatar:"م", codes:["git stash","git stash pop"],
+    text:"درست وسط یه ویرایش نیمه‌کاره، آژیر قرمز سازمان به صدا درمیاد: «هشدار! یه مأمور توی خط زمان دیگه‌ای گیر افتاده و به کمک فوری نیاز داره!» متین یه نگاه به تغییراتِ نصفه‌کاره‌ی خودش می‌ندازه — نه آماده‌ی commit کردنه، نه می‌تونه ولش کنه که پاک بشه. «باید یه‌جا موقتاً بذارمش کنار...»" },
+
+  { type:"level", task:"ماموریت ۲۱: ذخیره‌ی موقت کار نیمه‌کاره",
+    customerLine:"«کارتو کامل نکن، فقط با stash بذارش کنار برای بعد. این‌جوری هم فضای کاریت تمیز می‌مونه، هم هیچی گم نمی‌شه.»",
+    accept:/^git\s+stash$/i,
+    success:["Saved working directory and index state WIP on main: a1c3f9e شروع رسمی ردیابی خط زمان"],
+    hint:"دستور: git stash",
+    effect:"stash", visualMode:"stash" },
+
+  { type:"level", task:"ماموریت ۲۲: بازگشت به کار نیمه‌کاره",
+    customerLine:"«ماموریت اضطراری حل شد، مأمور نجات پیدا کرد. حالا وقتشه برگردیم سراغ همون کاری که نصفه‌کاره ول کرده بودیم.»",
+    accept:/^git\s+stash\s+pop$/i,
+    success:["On branch main","Changes not staged for commit:","        modified:   timeline-log.md","Dropped stash@{0}"],
+    hint:"دستور: git stash pop",
+    effect:"stashPop", visualMode:"stash" },
+
+  { type:"level", task:"ماموریت ۲۳: نشون‌گذاری یه لحظه‌ی تاریخی",
+    customerLine:"«پرونده‌ی دایناسورها و اون بحران تاریخ اشتباه، هر دو الان حل شدن. سرپرست می‌خواد این نقطه به‌عنوان یه نسخه‌ی رسمی و قابل‌اعتماد از خط زمان، برچسب بخوره — طوری که هر وقت لازم شد، سریع پیداش کنیم.»",
+    accept:/^git\s+tag\s+\S+$/i,
+    success:(cmd)=>{ const m = cmd.match(/tag\s+(\S+)/i); return ["(برچسب «"+(m?m[1]:"")+"» روی این چک‌پوینت ثبت شد)"]; },
+    hint:"دستور: git tag v1-stable — اسمش هر چی باشه قبوله، فقط باید بعد از tag یه اسم بذاری",
+    effect:"tag", visualMode:"branch" },
+
+  { type:"chapter", title:"اتصال به مرکز فرماندهی", avatar:"م", codes:[".gitignore","git remote add","git push","git clone","git pull"],
+    text:"سرپرست یه پیام فوری می‌فرسته: «متین، پایگاه دوم سازمان توی یه قاره‌ی دیگه داره باز می‌شه، و یه مأمور تازه‌کار به اسم آرمان قراره باهات روی همین پرونده کار کنه. دیگه کافی نیست فقط روی دستگاه خودت داشته باشیش — باید یه نسخه‌ی مرکزی روی مرکز فرماندهی (که توی این دنیا اسمش گیت‌هابه) بذاریم تا همه بهش دسترسی داشته باشن. راستی، یه فایل یادداشت شخصی هم دارم که نمی‌خوام کل سازمان ببینتش...»" },
+
+  { type:"quiz", title:"یه نکته‌ی مهم قبل از اتصال",
+    question:"متین یه فایل personal-notes.txt داره که نمی‌خواد سیستم ردیابیش کنه و اشتباهی به بقیه فرستاده بشه. بهترین راه چیه؟",
+    options:[
+      {t:"هر بار قبل از commit دستی پاکش کنه", correct:false},
+      {t:"اسمش رو توی یه فایل به اسم .gitignore بنویسه", correct:true},
+      {t:"اسم فایل رو طوری بذاره که سیستم گیج بشه", correct:false},
+    ],
+    explain:".gitignore یه لیست از فایل‌ها و پوشه‌هاییه که می‌گی سیستم اصلاً بهشون کاری نداشته باشه — نه توی status نشون بده، نه بذاره اشتباهی add بشن." },
+
+  { type:"level", task:"ماموریت ۲۳.۵: ساختن سند نادیده‌گیری",
+    customerLine:"«حرف نظری کافیه، بیا واقعاً بسازیمش. یه فایل به اسم .gitignore ساختیم و توش نوشتیم personal-notes.txt. حالا مثل هر سند دیگه‌ای باید add بشه.»",
+    accept:/^git\s+add\s+(\.gitignore|\.)$/i,
+    success:["(.gitignore به صف بررسی اضافه شد)"],
+    hint:"دستور: git add .gitignore",
+    effect:"stage", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۲۳.۶: ثبت سند نادیده‌گیری",
+    customerLine:"«حالا کامیتش کن تا رسماً بخشی از قوانین این پروژه بشه.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main g6b3e04] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " 1 file changed, 1 insertion(+)"],
+    hint:"دستور: git commit -m \"اضافه‌کردن .gitignore\"",
+    effect:"commit", visualMode:"branch" },
+
+  { type:"chapter", title:"بازنشسته کردن یه سند قدیمی", avatar:"م", codes:["git rm"],
+    text:"موقع مرتب‌کردن پوشه، متین به یه فایل قدیمی برمی‌خوره: old-protocol.md، یه سند از یه پروتکل منسوخ‌شده که سال‌ها پیش کنار گذاشته شده ولی هنوز توی ردیابی سیستمه. «این که دیگه به درد نمی‌خوره؛ اگه فقط از روی دیسک پاکش کنم، سیستم هنوز فکر می‌کنه باید ردیابیش کنه. باید رسماً بهش بگم بس کن.»" },
+
+  { type:"level", task:"ماموریت ۲۳.۷: توقف ردیابی یه سند منسوخ",
+    customerLine:"«با git rm هم خود فایل پاک می‌شه، هم سیستم می‌فهمه دیگه نباید ردیابیش کنه — و این تغییر هم میره توی صف بررسی.»",
+    accept:/^git\s+rm\s+old-protocol\.md$/i,
+    success:["rm 'old-protocol.md'"],
+    hint:"دستور: git rm old-protocol.md",
+    effect:"stage", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۲۳.۸: ثبت نهایی حذف",
+    customerLine:"«مثل همیشه، یه کامیت دیگه تا این تغییر هم رسمی بشه.»",
+    accept:/^git\s+commit\s+-m\s+("[^"]+"|'[^']+')\s*$/i,
+    success:(cmd)=>["[main h9c1f22] "+ (cmd.match(/"[^"]+"|'[^']+'/)||['""'])[0].replace(/^['"]|['"]$/g,''),
+      " 1 file changed, 12 deletions(-)"],
+    hint:"دستور: git commit -m \"حذف پروتکل منسوخ‌شده\"",
+    effect:"commit", visualMode:"branch" },
+
+  { type:"level", task:"ماموریت ۲۴: اتصال به مرکز فرماندهی",
+    customerLine:"«یه مخزن خالی روی گیت‌هاب ساختیم. حالا باید به سیستم بگیم این آدرس، همون origin ماست.»",
+    accept:/^git\s+remote\s+add\s+origin\s+\S+$/i,
+    success:["(origin به https://github.com/timeline-agency/earth-log.git وصل شد)"],
+    hint:"دستور: git remote add origin https://github.com/timeline-agency/earth-log.git",
+    effect:"remoteAdd", visualMode:"remote" },
+
+  { type:"level", task:"ماموریت ۲۵: ارسال گزارش به مرکز",
+    customerLine:"«حالا با push، هر چی توی دستگاه خودمون کامیت کردیم رو بفرستیم مرکز فرماندهی.»",
+    accept:/^git\s+push\s+(-u\s+origin\s+main|origin\s+main)$/i,
+    success:["Enumerating objects: 11, done.","Writing objects: 100% (11/11), done.","To https://github.com/timeline-agency/earth-log.git","   a1c3f9e..f2c918d  main -> main"],
+    hint:"دستور: git push -u origin main",
+    effect:"push", visualMode:"remote" },
+
+  { type:"level", task:"ماموریت ۲۶: تجهیز مأمور تازه‌کار",
+    customerLine:"«این یکی داستانش فرق داره: آرمان، مأمور تازه‌ی پایگاه دوم، دستگاه خالی داره. باید یه نسخه‌ی کامل از مخزن گیت‌هاب رو بگیره.»",
+    accept:/^git\s+clone\s+\S+$/i,
+    success:["Cloning into 'timeline-log'...","remote: Enumerating objects: 11, done.","Receiving objects: 100% (11/11), done."],
+    hint:"دستور: git clone https://github.com/timeline-agency/earth-log.git",
+    effect:"clone", visualMode:"remote" },
+
+  { type:"quiz", title:"یه سوال قبل از سینک کردن",
+    question:"فرق git fetch با git pull چیه؟",
+    options:[
+      {t:"هیچ فرقی ندارن، فقط اسمشون فرق داره", correct:false},
+      {t:"fetch فقط تغییرات جدید رو از مرکز فرماندهی میاره پایین ولی روی کار خودت اعمالشون نمی‌کنه؛ pull میاره و بلافاصله با کار خودت هم ادغام می‌کنه", correct:true},
+      {t:"fetch فقط برای کلون‌کردن استفاده می‌شه", correct:false},
+    ],
+    explain:"git fetch مثل اینه که بری از مرکز فرماندهی خبر بگیری ولی هنوز کاری نکنی — می‌تونی اول ببینی چی اومده. git pull در واقع خودش fetch رو انجام می‌ده و بلافاصله merge هم می‌کنه. برای شروع کار روزانه معمولاً pull سریع‌تره، ولی fetch برای وقتی مفیده که می‌خوای اول با احتیاط نگاه کنی." },
+
+  { type:"level", task:"ماموریت ۲۷: به‌روزرسانی قبل از شیفت",
+    customerLine:"«آرمان هر روز صبح قبل از کار باید مطمئن بشه آخرین تغییراتی که بقیه push کردن رو داره. برای این کار...»",
+    accept:/^git\s+pull(\s+origin\s+main)?$/i,
+    success:["From https://github.com/timeline-agency/earth-log","   f2c918d..a83bd21  main -> origin/main","Updating f2c918d..a83bd21","Fast-forward"],
+    hint:"دستور: git pull",
+    effect:"pull", visualMode:"remote" },
+
+  { type:"quiz", title:"آخرین سوال قبل از فارغ‌التحصیلی",
+    question:"آرمان می‌خواد یه تغییر پیشنهاد بده ولی نمی‌خواد مستقیم روی main دست ببره تا متین اول ببینتش. توی گیت‌هاب اسم این کار چیه؟",
+    options:[
+      {t:"Pull Request — یعنی «این تغییرات رو بررسی کن، اگه اوکی بود merge کن»", correct:true},
+      {t:"مستقیم push می‌کنه روی main و بعد به متین خبر می‌ده", correct:false},
+      {t:"کل مخزن رو دوباره می‌سازه", correct:false},
+    ],
+    explain:"Pull Request (PR) یه دستور گیت نیست، یه قابلیت گیت‌هابه: تغییراتت رو توی یه branch جدا می‌ذاری، push می‌کنی، و بعد از توی گیت‌هاب درخواست می‌دی که کسی نگاش کنه و merge کنه. این‌جوری هیچ‌وقت یهو یه تغییر بد مستقیم نمی‌ره روی main." },
+
+  { type:"chapter", title:"فارغ‌التحصیلی", avatar:"م", codes:[],
+    text:"سرپرست روی مانیتور ظاهر می‌شه: «متین، چند روز پیش حتی نمی‌دونستی commit چیه، و الان می‌تونی خط زمان باز کنی، پارادوکس حل کنی، به گذشته سفر کنی، مسئول یه تغییر رو با blame پیدا کنی، یه اشتباه رو امن با revert لغو کنی، یه غلط تایپی رو با amend اصلاح کنی، کارِ نیمه‌کاره رو با stash موقت کنار بذاری، یه سند بازنشسته رو رسمی حذف کنی، یه لحظه‌ی تاریخی رو تگ بزنی، و با یه تیم روی مرکز فرماندهی کار کنی. اون فاجعه‌ی کیک شکلاتی دیگه هیچ‌وقت تکرار نمی‌شه — حداقل نه به این شکل. رسماً مأمور کامل خط زمان شدی.» متین یه لبخند می‌زنه: «حالا فقط امیدوارم پرونده‌ی بعدی‌مون یه‌کم آرومتر باشه.»" },
+];
+
+/* ================= state ================= */
+let state = {
+  stepIndex:0,
+  terminal:[],
+  repo:{
+    currentBranch:"main",
+    detached:false,
+    branches:{ main:{commits:[]}, "dino-survive":{commits:[], exists:false, deleted:false} },
+    remoteConnected:false,
+    stashed:false,
+    tags:[],
+  },
+  solved:false,
+  lastFailed:false,
+  showHint:false,
+  attempts:0,
+  hintUsedThisStep:false,
+  feedbackMsg:"",
+  totalStars:0,
+  starred:new Set(),
+  completed:new Set(),
+  quizChoice:null,
+  quizFirstTry:true,
+  choicePicked:null,
+};
+
+function freshRepo(){
+  return { currentBranch:"main", detached:false, branches:{main:{commits:[]}, "dino-survive":{commits:[],exists:false,deleted:false}}, remoteConnected:false, stashed:false, tags:[] };
+}
+
+function resetForStep(){
+  state.solved = false;
+  state.lastFailed = false;
+  state.showHint = false;
+  state.attempts = 0;
+  state.hintUsedThisStep = false;
+  state.feedbackMsg = "";
+  state.quizChoice = null;
+  state.quizFirstTry = true;
+  state.choicePicked = null;
+}
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function toFa(n){ const map={"0":"۰","1":"۱","2":"۲","3":"۳","4":"۴","5":"۵","6":"۶","7":"۷","8":"۸","9":"۹"}; return String(n).split("").map(c=>map[c]!==undefined?map[c]:c).join(""); }
+
+/* ================= repo effects ================= */
+let commitCounter = 1;
+function applyEffect(level, cmd){
+  const r = state.repo;
+  switch(level.effect){
+    case "commit": { r.branches.main.commits.push({id:"c"+(commitCounter++)}); break; }
+    case "createBranch": { r.branches["dino-survive"].exists = true; r.branches["dino-survive"].deleted = false; break; }
+    case "switchBranch": { r.currentBranch = level.branchTarget; r.detached = false; break; }
+    case "commitOnBranch": { r.branches["dino-survive"].commits.push({id:"c"+(commitCounter++), vegan:true}); break; }
+    case "mergeConflict": { break; }
+    case "amend": {
+      const list = r.branches.main.commits;
+      if(list.length) list[list.length-1].amended = true;
+      break;
+    }
+    case "blame": { break; }
+    case "commitMerge": { r.branches.main.commits.push({id:"c"+(commitCounter++), merge:true}); break; }
+    case "deleteBranch": { r.branches["dino-survive"].deleted = true; break; }
+    case "travelBack": { r.detached = true; break; }
+    case "returnFromTravel": { r.detached = false; r.currentBranch = "main"; break; }
+    case "diffCheck": { break; }
+    case "revert": { r.branches.main.commits.push({id:"c"+(commitCounter++), revert:true}); break; }
+    case "stash": { r.stashed = true; break; }
+    case "stashPop": { r.stashed = false; break; }
+    case "tag": {
+      const m = cmd.match(/tag\s+(\S+)/i);
+      r.tags.push(m ? m[1] : "checkpoint");
+      break;
+    }
+    case "remoteAdd": { r.remoteConnected = true; break; }
+    case "push": { r.pushed = true; break; }
+    case "pull": { r.pulled = true; break; }
+    default: break;
+  }
+}
+
+/* ================= rendering ================= */
+function renderDots(){
+  const dots = document.getElementById("dots");
+  dots.innerHTML = "";
+  STEPS.forEach((s,i) => {
+    if(s.type === "chapter") return;
+    const d = document.createElement("div");
+    d.className = "dot" + (s.type==="quiz"?" quiz":"") + (state.completed.has(i)?" done":"") + (i===state.stepIndex?" current":"");
+    dots.appendChild(d);
+  });
+  document.getElementById("starBadge").textContent = "⭐ " + toFa(state.totalStars);
+}
+
+function renderTerminal(){
+  let html = "";
+  state.terminal.forEach(line => {
+    if(line.type === "cmd"){
+      html += `<div class="term-line cmd"><span class="prompt">matin@timeline-hq:~$ </span><span class="cmdtext">${line.text}</span></div>`;
+    } else if(line.type === "diffadd"){
+      html += `<div class="term-line diffadd">${line.text}</div>`;
+    } else if(line.type === "diffrem"){
+      html += `<div class="term-line diffrem">${line.text}</div>`;
+    } else {
+      html += `<div class="term-line ${line.type==='err'?'err':'out'}">${line.text}</div>`;
+    }
+  });
+  return `<div class="terminal" id="termBox">${html}</div>`;
+}
+
+function scrollTerminal(){
+  const box = document.getElementById("termBox");
+  if(box) box.scrollTop = box.scrollHeight;
+}
+
+function renderVisualPanel(level){
+  if(!level || !level.visualMode) return "";
+  const r = state.repo;
+  if(level.visualMode === "pipeline"){
+    const stage = level.pipelineStage !== undefined ? level.pipelineStage : -1;
+    return `<div class="visual-panel">
+      <div class="visual-label">مسیر یک سند، از لحظه‌ی وقوع تا بایگانی رسمی</div>
+      <div class="pipeline">
+        <div class="pipe-box ${stage===0?'active':''}"><span class="pipe-file">🕓</span>در حال وقوع</div>
+        <span class="pipe-arrow">←</span>
+        <div class="pipe-box ${stage===1?'active':''}"><span class="pipe-file">📋</span>صف بررسی</div>
+        <span class="pipe-arrow">←</span>
+        <div class="pipe-box ${stage===2?'active':''}"><span class="pipe-file">🗄</span>بایگانی رسمی</div>
+      </div>
+    </div>`;
+  }
+  if(level.visualMode === "stash"){
+    return `<div class="visual-panel">
+      <div class="visual-label">وضعیت کار نیمه‌کاره</div>
+      <div class="stash-box">
+        <div class="stash-icon ${r.stashed ? 'full':''}">${r.stashed ? '📦' : '🗑️'}</div>
+        <div class="stash-text">${r.stashed ? 'یه مجموعه تغییرِ ذخیره‌شده، منتظر برگشتنه.' : 'الان چیزی کنار گذاشته نشده.'}</div>
+      </div>
+    </div>`;
+  }
+  if(level.visualMode === "branch"){
+    const exists = r.branches["dino-survive"].exists && !r.branches["dino-survive"].deleted;
+    let html = `<div class="visual-panel"><div class="visual-label">نقشه‌ی خط‌های زمانی</div>`;
+    if(r.detached) html += `<div class="detached-note">🌀 الان بیرون از هر خط زمانی‌ای، توی یه لحظه‌ی گذشته‌ای (detached HEAD)</div>`;
+    html += `<div class="branch-row"><span class="branch-name ${(!r.detached && r.currentBranch==='main')?'current':''}">main</span><div class="commit-dots">`;
+    r.branches.main.commits.forEach(c => { html += `<div class="commit-dot ${c.merge?'merge':(c.revert?'revert':'')}"></div>`; });
+    if(r.branches.main.commits.length===0) html += `<div class="commit-dot ghost"></div>`;
+    html += `</div>`;
+    if(!r.detached && r.currentBranch==='main') html += `<span class="here-badge">اینجایی</span>`;
+    r.tags.forEach(t => { html += `<span class="here-badge" style="color:#E0B65C;">🏷 ${t}</span>`; });
+    html += `</div>`;
+    if(exists){
+      html += `<div class="branch-row"><span class="branch-name ${(!r.detached && r.currentBranch==='dino-survive')?'current':''}">dino-survive</span><div class="commit-dots">`;
+      r.branches["dino-survive"].commits.forEach(c => { html += `<div class="commit-dot vegan"></div>`; });
+      if(r.branches["dino-survive"].commits.length===0) html += `<div class="commit-dot ghost"></div>`;
+      html += `</div>${(!r.detached && r.currentBranch==='dino-survive') ? '<span class="here-badge">اینجایی</span>' : ''}</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+  if(level.visualMode === "remote"){
+    return `<div class="visual-panel">
+      <div class="visual-label">همگام‌سازی با مرکز فرماندهی</div>
+      <div class="remote-row">
+        <div class="remote-box connected">
+          <div class="rb-title">💻 دستگاه متین</div>
+          <div class="rb-dots">${r.branches.main.commits.map(()=>'<div class="commit-dot"></div>').join("")}</div>
+        </div>
+        <div class="remote-arrow">${r.pushed ? "→" : (r.remoteConnected ? "⇄" : "···")}</div>
+        <div class="remote-box ${r.remoteConnected ? 'connected':''}">
+          <div class="rb-title">🛰 مرکز فرماندهی</div>
+          <div class="rb-dots">${r.pushed ? r.branches.main.commits.map(()=>'<div class="commit-dot"></div>').join("") : ""}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  return "";
+}
+
+function renderGame(){
+  const card = document.getElementById("gameCard");
+  const step = STEPS[state.stepIndex];
+
+  if(!step){
+    card.innerHTML = `
+      <div class="final">
+        <h2>مأموریت کامل شد! 🎖️</h2>
+        <p>سرپرست از پشت میزش بلند می‌شه و باهات دست می‌ده: «رسماً مأمور کامل خط زمان شدی. حالا برو یه مخزن واقعی برای خودت بساز و شروع کن.»</p>
+        <div class="stars-final">⭐ ${toFa(state.totalStars)} ستاره جمع کردی</div>
+        <button class="btn btn-primary" id="restartBtn">از اول شروع کن</button>
+      </div>`;
+    document.getElementById("restartBtn").onclick = () => {
+      commitCounter = 1;
+      state = {stepIndex:0, terminal:[], repo:freshRepo(), solved:false, lastFailed:false, showHint:false, attempts:0, hintUsedThisStep:false, feedbackMsg:"", totalStars:0, starred:new Set(), completed:new Set(), quizChoice:null, quizFirstTry:true, choicePicked:null};
+      renderDots(); renderGame();
+    };
+    return;
+  }
+
+  if(step.type === "chapter") return renderChapter(card, step);
+  if(step.type === "quiz") return renderQuiz(card, step);
+  if(step.type === "choice") return renderChoice(card, step);
+  return renderLevel(card, step);
+}
+
+function renderChapter(card, step){
+  const codesHtml = (step.codes||[]).map(c => `<span class="code-pill">${c}</span>`).join("");
+  card.innerHTML = `
+    <div class="chapter-title">${step.title}</div>
+    <div class="mentor-row"><div class="avatar">${step.avatar}</div><div class="mentor-bubble">${step.text}</div></div>
+    ${codesHtml ? `<div class="codes-preview"><span class="codes-preview-label">امروز با این‌ها کار داریم:</span><div class="code-pills">${codesHtml}</div></div>` : ""}
+    <div class="actions"><button class="btn btn-primary" id="goBtn">بزن بریم</button></div>
+  `;
+  document.getElementById("goBtn").onclick = () => { state.stepIndex+=1; resetForStep(); renderDots(); renderGame(); };
+}
+
+function renderQuiz(card, step){
+  let optsHtml = "";
+  step.options.forEach((opt,i) => {
+    let cls = "quiz-opt";
+    if(state.quizChoice !== null){
+      if(i===state.quizChoice && opt.correct) cls += " correct";
+      else if(i===state.quizChoice && !opt.correct) cls += " wrong";
+      else if(opt.correct) cls += " correct";
+    }
+    optsHtml += `<button class="${cls}" data-i="${i}">${opt.t}</button>`;
+  });
+  const answered = state.quizChoice !== null;
+  const correctChosen = answered && step.options[state.quizChoice].correct;
+  card.innerHTML = `
+    <div class="chapter-title">${step.title}</div>
+    <div class="quiz-q">${step.question}</div>
+    ${optsHtml}
+    <div class="quiz-explain ${answered?'show':''}">${step.explain}${(correctChosen && state.quizFirstTry) ? '<div class="star-line">⭐ درست گفتی از اولین بار — یه ستاره گرفتی!</div>' : ''}</div>
+    <div class="actions" style="margin-top:14px;">
+      ${correctChosen ? `<button class="btn btn-success" id="nextBtn">ادامه</button>` : `<span style="color:var(--ink-soft);font-size:12.5px;">${answered ? "دوباره امتحان کن 🙂" : "یکی رو انتخاب کن"}</span>`}
+    </div>`;
+  card.querySelectorAll(".quiz-opt").forEach(btn => {
+    btn.onclick = () => {
+      const i = Number(btn.dataset.i);
+      if(state.quizChoice !== null && step.options[state.quizChoice].correct) return;
+      if(state.quizChoice !== null) state.quizFirstTry = false;
+      state.quizChoice = i;
+      if(step.options[i].correct && state.quizFirstTry && !state.starred.has(state.stepIndex)){
+        state.starred.add(state.stepIndex); state.totalStars += 1;
+      }
+      renderDots(); renderGame();
+    };
+  });
+  const nextBtn = document.getElementById("nextBtn");
+  if(nextBtn) nextBtn.onclick = () => { state.completed.add(state.stepIndex); state.stepIndex+=1; resetForStep(); renderDots(); renderGame(); };
+}
+
+function renderChoice(card, step){
+  let optsHtml = "";
+  step.options.forEach((opt,i) => {
+    const cls = "choice-opt" + (state.choicePicked===i ? " picked" : "");
+    optsHtml += `<button class="${cls}" data-i="${i}">${opt.label}</button>`;
+  });
+  const picked = state.choicePicked !== null;
+  card.innerHTML = `
+    <div class="chapter-title">${step.title}</div>
+    <div class="mentor-row"><div class="avatar">${step.avatar}</div><div class="mentor-bubble">${step.customerLine}</div></div>
+    ${optsHtml}
+    ${picked ? `<div class="quiz-explain show">${step.options[state.choicePicked].reaction}<br><br>${step.afterText}</div>` : ""}
+    <div class="actions" style="margin-top:14px;">
+      ${picked ? `<button class="btn btn-success" id="nextBtn">باشه، بریم ادامه بدیم</button>` : `<span style="color:var(--ink-soft);font-size:12.5px;">هر گزینه قابل قبوله — انتخاب کن</span>`}
+    </div>`;
+  card.querySelectorAll(".choice-opt").forEach(btn => {
+    btn.onclick = () => { state.choicePicked = Number(btn.dataset.i); renderGame(); };
+  });
+  const nextBtn = document.getElementById("nextBtn");
+  if(nextBtn) nextBtn.onclick = () => { state.completed.add(state.stepIndex); state.stepIndex+=1; resetForStep(); renderDots(); renderGame(); };
+}
+
+function renderLevel(card, level){
+  const isLast = state.stepIndex === STEPS.length-1;
+  let feedbackHtml = "";
+  if(state.solved){
+    const bonus = (state.attempts===1 && !state.hintUsedThisStep);
+    feedbackHtml = `<div class="feedback show ok">${state.feedbackMsg}${bonus ? '<div class="star-line">⭐⭐ از همون بار اول و بدون راهنما — دو ستاره‌ی ویژه!</div>' : ''}</div>`;
+  } else if(state.lastFailed){
+    feedbackHtml = `<div class="feedback show no">${state.feedbackMsg}</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="task-bubble"><div class="task-label">${level.task}</div>${level.customerLine}</div>
+    ${renderVisualPanel(level)}
+    ${renderTerminal()}
+    ${state.solved ? "" : `
+    <div class="term-input-row">
+      <span class="prompt">matin@timeline-hq:~$</span>
+      <input class="term-input" id="cmdInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="دستور رو اینجا تایپ کن...">
+      <button class="term-run" id="runBtn">اجرا</button>
+    </div>`}
+    <div class="hint-text ${state.showHint?'show':''}">💡 ${level.hint}</div>
+    <div class="actions" style="margin-top:6px;">
+      <button class="btn btn-ghost" id="hintBtn">راهنما</button>
+      ${state.solved ? `<button class="btn btn-success" id="nextBtn">${isLast ? "پایان بازی" : "مرحله بعد"}</button>` : ""}
+    </div>
+    ${feedbackHtml}
+  `;
+  scrollTerminal();
+
+  const hintBtn = document.getElementById("hintBtn");
+  if(hintBtn) hintBtn.onclick = () => { state.showHint = !state.showHint; if(state.showHint) state.hintUsedThisStep = true; renderGame(); };
+
+  const nextBtn = document.getElementById("nextBtn");
+  if(nextBtn) nextBtn.onclick = () => { state.stepIndex+=1; resetForStep(); renderDots(); renderGame(); };
+
+  const runBtn = document.getElementById("runBtn");
+  const input = document.getElementById("cmdInput");
+  function runCommand(){
+    const raw = input.value;
+    if(!normalize(raw)) return;
+    const cmd = normalize(raw);
+    state.terminal.push({type:"cmd", text:cmd});
+    state.attempts += 1;
+    if(level.accept.test(cmd)){
+      const outLines = typeof level.success === "function" ? level.success(cmd) : level.success;
+      outLines.forEach(t => {
+        let lineType = level.outputType || "out";
+        if(level.effect === "diffCheck"){
+          if(t.startsWith("-") && !t.startsWith("---")) lineType = "diffrem";
+          else if(t.startsWith("+") && !t.startsWith("+++")) lineType = "diffadd";
+        }
+        state.terminal.push({type: lineType, text:t});
+      });
+      applyEffect(level, cmd);
+      state.solved = true;
+      state.lastFailed = false;
+      state.feedbackMsg = pick(SUCCESS_LINES);
+      state.completed.add(state.stepIndex);
+      const bonus = (state.attempts===1 && !state.hintUsedThisStep);
+      let starsGain = 1 + (bonus ? 1 : 0);
+      if(!state.starred.has(state.stepIndex)){
+        state.starred.add(state.stepIndex);
+        state.totalStars += starsGain;
+      }
+      renderDots();
+    } else {
+      state.terminal.push({type:"err", text:"command not recognized for this step"});
+      state.lastFailed = true;
+      state.feedbackMsg = pick(FAIL_LINES);
+    }
+    input.value = "";
+    renderGame();
+  }
+  if(runBtn) runBtn.onclick = runCommand;
+  if(input){
+    input.addEventListener("keydown", e => { if(e.key === "Enter") runCommand(); });
+    input.focus();
+  }
+}
+
+renderDots();
+renderGame();
+</script>
+</body>
+</html>
