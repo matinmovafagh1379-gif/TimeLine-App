@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "ir.matinmovafagh.timelineguardian",
+        "sha256_cert_fingerprints": ["B3:F3:C5:D5:CA:32:79:B4:50:14:B6:5F:49:AC:42:54:77:0F:32:84:E1:67:55:71:13:FF:0E:73:FE:E2:73:79"]
+      }
+    }]
